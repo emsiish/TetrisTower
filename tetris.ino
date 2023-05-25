@@ -79,8 +79,6 @@ bool shapes[7][4][4] = {
 bool currentShape[4][4];
 long currPosX = 0, currPosY = 0, prevPosX = 0, prevPosY = 0;
 
-bool skippedTurn = false;
-
 bool gameBoard[ROWS][COLS];
 
 unsigned long randSeed = 0;
@@ -90,69 +88,23 @@ uint8_t currentShapeIndex;
 int minX = 3, minY = 3, maxX = 0, maxY = 0;
 
 void initMatrices() {
-    matrix1.shutdown(0, false);
-    matrix1.setIntensity(0, 4);
-    matrix1.clearDisplay(0);
+  for(int i = 0; i < 4; i++) {
+    matrix1.shutdown(i, false);
+    matrix1.setIntensity(i, 4);
+    matrix1.clearDisplay(i);
 
-    matrix1.shutdown(1, false);
-    matrix1.setIntensity(1, 4);
-    matrix1.clearDisplay(1);
+    matrix2.shutdown(i, false);
+    matrix2.setIntensity(i, 4);
+    matrix2.clearDisplay(i);
 
-    matrix1.shutdown(2, false);
-    matrix1.setIntensity(2, 4);
-    matrix1.clearDisplay(2);
+    matrix3.shutdown(i, false);
+    matrix3.setIntensity(i, 4);
+    matrix3.clearDisplay(i);
 
-    matrix1.shutdown(3, false);
-    matrix1.setIntensity(3, 4);
-    matrix1.clearDisplay(3);
-
-    matrix2.shutdown(0, false);
-    matrix2.setIntensity(0, 4);
-    matrix2.clearDisplay(0);
-
-    matrix2.shutdown(1, false);
-    matrix2.setIntensity(1, 4);
-    matrix2.clearDisplay(1);
-
-    matrix2.shutdown(2, false);
-    matrix2.setIntensity(2, 4);
-    matrix2.clearDisplay(2);
-
-    matrix2.shutdown(3, false);
-    matrix2.setIntensity(3, 4);
-    matrix2.clearDisplay(3);
-
-    matrix3.shutdown(0, false);
-    matrix3.setIntensity(0, 4);
-    matrix3.clearDisplay(0);
-
-    matrix3.shutdown(1, false);
-    matrix3.setIntensity(1, 4);
-    matrix3.clearDisplay(1);
-
-    matrix3.shutdown(2, false);
-    matrix3.setIntensity(2, 4);
-    matrix3.clearDisplay(2);
-
-    matrix3.shutdown(3, false);
-    matrix3.setIntensity(3, 4);
-    matrix3.clearDisplay(3);
-
-    matrix4.shutdown(0, false);
-    matrix4.setIntensity(0, 4);
-    matrix4.clearDisplay(0);
-
-    matrix4.shutdown(1, false);
-    matrix4.setIntensity(1, 4);
-    matrix4.clearDisplay(1);
-
-    matrix4.shutdown(2, false);
-    matrix4.setIntensity(2, 4);
-    matrix4.clearDisplay(2);
-
-    matrix4.shutdown(3, false);
-    matrix4.setIntensity(3, 4);
-    matrix4.clearDisplay(3);
+    matrix4.shutdown(i, false);
+    matrix4.setIntensity(i, 4);
+    matrix4.clearDisplay(i);
+  }
 }
 
 void setupGameBoard() {
@@ -314,7 +266,16 @@ void removeRows() {
     }
 }
 
-void collision() {
+void gameOver() {
+  for (int i = 0; i < 4; i++) {
+    matrix1.clearDisplay(i);
+    matrix2.clearDisplay(i);
+    matrix3.clearDisplay(i);
+    matrix4.clearDisplay(i);
+  }
+}
+
+bool collision() {
     int shapeIndex = random(0, 7);
     for(int i = 0; i < 4; i++) {
         for(int j = 0; j < 4; j++) {
@@ -327,9 +288,16 @@ void collision() {
                         currentShape[i][j] = shapes[shapeIndex][i][j];
 
                 resetPosition();
-
+                for(int i = 0; i < 4; i++) {
+                  for(int j = 0; j < 4; j++) {
+                    if(curentShape[i][j] && gameBoard[currPosX + i][currPosY + j]) {
+                      gameOver();
+                      return false; //game is over
+                    }
+                  }                                    
+                }
                 removeRows();
-                break;
+                return true; //game is not over (could be both collision or no)
             }
         }
     }
@@ -357,7 +325,10 @@ void loop() {
 
     addShapeOnGameBoard();
 
-    collision();
+    if(!collision())
+    {
+      return;
+    }
 
     drawGameOnLED();
 
